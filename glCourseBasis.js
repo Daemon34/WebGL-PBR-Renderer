@@ -488,7 +488,7 @@ loadObjFile = function(OBJ3D)
 		}
 	}
 
-	xhttp.open("GET", "bunny.obj", true);
+	xhttp.open("GET", "Models/" + OBJ3D.objName, true);
 	xhttp.send();
 }
 
@@ -517,7 +517,7 @@ function loadShaderText(Obj3D,ext) {   // lecture asynchrone...
   }
   
   Obj3D.loaded = 0;
-  xhttp.open("GET", Obj3D.shaderName+ext, true);
+  xhttp.open("GET", "Shaders/"+Obj3D.shaderName+ext, true);
   xhttp.send();
 }
 
