@@ -1,0 +1,151 @@
+<html>
+
+<head>
+	<title>WebGL - Canvas test</title>
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+	<link rel="stylesheet" href="styles.css">
+	<script type="text/javascript" src="glMatrix.js"></script>
+	<script type="text/javascript" src="callbacks.js"></script>
+	<script type="text/javascript" src="glCourseBasis.js"></script>
+	<script type="text/javascript" src="objLoader.js"></script>
+</head>
+
+
+<body onload="webGLStart();">
+	<div id="canvasWebGL">
+		<canvas id="WebGL-test" style="border:none;" width="800" height="600"></canvas>
+	</div>
+	<br><br>
+	<div id="parametresDiv">
+		<div>
+			<h1>Choix Modele</h1>
+			<div>
+				<input type="radio" id="Lambert" name="modele" value="0" checked>
+				<label for="Lambert">Lambert</label>
+				<input type="radio" id="PhongModifie" name="modele" value="1">
+				<label for="PhongModifie">Phong Modifie</label>
+				<input type="radio" id="Cook-TorranceBeckmann" name="modele" value="2">
+				<label for="Cook-TorranceBeckmann">Cook-Torrance Distribution Beckmann</label>
+				<input type="radio" id="Cook-TorranceGGX" name="modele" value="3">
+				<label for="Cook-TorranceGGX">Cook-Torrance Distribution GGX</label>
+				<input type="radio" id="UtilisationSkybox" name="modele" value="4">
+				<label for="UtilisationSkybox">Utilisation Skybox</label>
+			</div>
+		</div>
+		<br><br>
+		<div>
+			<h1>Parametres Generaux</h1>
+			<div>
+				<input type="color" id="couleurObjet" name="couleurObjet" value="#e66465">
+				<label for="couleurObjet"> Couleur Objet</label>
+				<br><br>
+				<div>
+					<p><u>Parametres Source Lumineuse</u></p>
+					<input type="color" id="couleurLumiere" name="couleurLumiere" value="#e66465">
+					<label for="couleurLumiere"> Couleur Lumiere</label>
+					<input type="range" id="puissanceLumiere" name="puissanceLumiere" min="0" max="5" step="0.1">
+					<label for="couleurLumiere"> Puissance Lumiere</label>
+					<input type="range" id="positionZLumiere" name="positionZLumiere" min="-10" max="10" step="1">
+					<label for="positionZLumiere"> Position Z Lumiere</label>
+				</div>
+			</div>
+		</div>
+		<br><br>
+		<div id="ParametreCookTorrance">
+			<h1>Parametres Modele Cook-Torrance</h1>
+			<div>
+				<input type="range" id="coeffDiffus" name="coeffDiffus" min="0" max="1" step="0.05">
+				<label for="coeffDiffus"> Coefficient Diffus</label>
+				<input type="range" id="coeffSpeculaire" name="coeffSpeculaire" min="0" max="1" step="0.05">
+				<label for="coeffSpeculaire"> Coefficient Speculaire</label>
+				<br>
+				<input type="range" id="Rugosite" name="Rugosite" min="0" max="1" step="0.05">
+				<label for="Rugosite"> Rugosite</label>
+				<div>
+					<p><u>Milieu de l'objet</u></p>
+					<input type="radio" id="Verre" name="indiceMilieu" value="1.5" checked>
+					<label for="Verre">Verre</label>
+					<input type="radio" id="Eau" name="indiceMilieu" value="1.3330">
+					<label for="Eau">Eau</label>
+					<input type="radio" id="Titane" name="indiceMilieu" value="2.496">
+					<label for="Titane">Titane</label>
+				</div>
+			</div>
+		</div>
+		<div id="ParametreBlinnPhongModifie">
+			<h1>Parametres Modele Phong Modifie</h1>
+			<div>
+				<input type="range" id="coeffDiffus" name="coeffDiffus" min="0" max="1" step="0.05">
+				<label for="coeffDiffus"> Coefficient Diffus</label>
+				<input type="range" id="coeffSpeculaire" name="coeffSpeculaire" min="0" max="1" step="0.01">
+				<label for="coeffSpeculaire"> Coefficient Speculaire</label>
+				<br>
+				<input type="range" id="n" name="n" min="0" max="50" step="10.0">
+				<label for="n"> n</label>
+			</div>
+		</div>
+		<div id="ParametreSkybox">
+			<h1>Parametres Skybox</h1>
+			<div>
+				<input type="range" id="IndiceMilieuSkybox" name="IndiceMilieuSkybox" min="1" max="5" step="0.05">
+				<label for="IndiceMilieuSkybox">Indice Milieu</label>
+				<input type="checkbox" id="Transparent" name="Transparent" checked>
+  				<label for="Transparent">Transparent</label>
+  				<input type="checkbox" id="Mirroir" name="Mirroir" checked>
+  				<label for="Mirroir">Mirroir</label>
+			</div>
+		</div>
+	</div>
+	<script>
+		document.getElementById("coeffDiffus").onchange = function() {updateSpeculaire()};
+		document.getElementById("coeffSpeculaire").onchange = function() {updateDiffus()};
+		document.getElementById("Cook-TorranceGGX").onchange = function() {showParametersTorrance()};
+		document.getElementById("Cook-TorranceBeckmann").onchange = function() {showParametersTorrance()};
+		document.getElementById("PhongModifie").onchange = function() {showParametersPhong()};
+		document.getElementById("Lambert").onchange = function() {hideParameters()};
+		document.getElementById("UtilisationSkybox").onchange = function() {showParametersSkybox()};
+
+		function updateSpeculaire() {
+			document.getElementById("coeffSpeculaire").value = (1.0 - document.getElementById("coeffDiffus").value);
+		}
+
+		function updateDiffus() {
+			document.getElementById("coeffDiffus").value = (1.0 - document.getElementById("coeffSpeculaire").value);
+		}
+
+		function showParametersTorrance(){
+			if(document.getElementById("Cook-TorranceBeckmann").checked || document.getElementById("Cook-TorranceGGX").checked){
+				document.getElementById("ParametreCookTorrance").style.display = "block";
+				document.getElementById("ParametreBlinnPhongModifie").style.display = "none";
+				document.getElementById("ParametreSkybox").style.display = "none";
+			}
+		}
+
+		function showParametersPhong(){
+			if(document.getElementById("PhongModifie").checked){
+				document.getElementById("ParametreCookTorrance").style.display = "none";
+				document.getElementById("ParametreBlinnPhongModifie").style.display = "block";
+				document.getElementById("ParametreSkybox").style.display = "none";
+			}
+		}
+
+		function showParametersSkybox(){
+			if(document.getElementById("UtilisationSkybox").checked){
+				document.getElementById("ParametreCookTorrance").style.display = "none";
+				document.getElementById("ParametreBlinnPhongModifie").style.display = "none";
+				document.getElementById("ParametreSkybox").style.display = "block";
+			}
+		}
+
+		function hideParameters(){
+			if(document.getElementById("Lambert").checked){
+				document.getElementById("ParametreCookTorrance").style.display = "none";
+				document.getElementById("ParametreBlinnPhongModifie").style.display = "none";
+				document.getElementById("ParametreSkybox").style.display = "none";
+			}
+		}
+	</script>
+</body>
+
+
+</html>
